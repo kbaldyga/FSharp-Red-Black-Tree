@@ -131,14 +131,16 @@ module Tree =
                     let bc = append r1 l2
                     match bc with
                         | Node(Red, bl, bv, br)   -> Node(Red, Node(Red, l1, v1, bl), bv, Node(Red, br, v2, r2))
-                        | Node(Black, bl, bv, br) -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
-                        | Empty -> failwith "bc1 can not be empty"
+                        | _ -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
+                        //| Node(Black, bl, bv, br) -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
+                        //| Empty -> failwith "bc1 can not be empty"
                 | Node(Black, l1, v1, r1), Node(Black, l2, v2, r2) ->
                     let bc = append r1 l2
                     match bc with
                         | Node(Red, bl, bv, br) -> Node(Red, Node(Black, l1, v1, bl), bv, Node(Black, br, v2, r2))
-                        | Node(Black, bl, bv, br) -> balLeft v1 l1 (Node(Black, bc, v2, r2))
-                        | Empty -> failwith "bc2 can not be empty"
+                        | _ -> balLeft v1 l1 (Node(Black, bc, v2, r2))
+                        //| Node(Black, bl, bv, br) -> balLeft v1 l1 (Node(Black, bc, v2, r2))
+                        //| Empty -> failwith "bc2 can not be empty"
 
                 | _, Node(Red, l2, v2, r2) -> Node(Red, append left l2, v2, r2)
                 | Node(Red, l1, v1, r1), _ -> Node(Red, l1, v1, append r1 right)
@@ -167,4 +169,4 @@ module Tree =
 
 
     let test = Seq.fold (fun acc item -> insert item acc) Empty [1..100]
-                |> delete 40
+                |> delete 40 |> toJson
