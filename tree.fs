@@ -70,18 +70,17 @@ module Tree =
         | Node(_, l, v, r) when key > v -> lookup key r
         | Node(_, l, v, r) as node when key = v -> Some(v)
 
-    // consider moving inside delete
-    let blacken = function
-        | Empty -> Empty
-        | Node(Black, _, _, _ ) as b -> b
-        | Node(Red, l, v, r) -> Node(Black, l, v, r)
-    let redden = function
-        | Empty -> Empty
-        | Node(Black, l, v, r ) -> Node(Red, l, v, r)
-        | Node(Red, _, _, _) as r -> r
-
     // "copied" from https://github.com/scala/scala/blob/2.11.x/src/library/scala/collection/immutable/RedBlackTree.scala
-    let rec delete key tree =
+    let rec delete (comparer: IComparer<'T>) key tree =
+
+        let blacken = function
+            | Empty -> Empty
+            | Node(Black, _, _, _ ) as b -> b
+            | Node(Red, l, v, r) -> Node(Black, l, v, r)
+        let redden = function
+            | Empty -> Empty
+            | Node(Black, l, v, r ) -> Node(Red, l, v, r)
+            | Node(Red, _, _, _) as r -> r
 
         let balance item left right = 
              match left, right with
@@ -120,18 +119,15 @@ module Tree =
                 | _ -> failwith "balRight Defect: invariance violation"
 
         let delLeft = function
-            | Node(_, (Node(Black, _, _, _ ) as l), v, r) -> balLeft v (delete key l) r
-            | Node(_, l, v, r) -> Node(Red, delete key l, v, r)
+            | Node(_, (Node(Black, _, _, _ ) as l), v, r) -> balLeft v (delete comparer key l) r
+            | Node(_, l, v, r) -> Node(Red, delete comparer key l, v, r)
             | Empty -> failwith "can not delLeft on Empty"
         let delRight = function
-            | Node(_, l, v, (Node(Black, _, _, _) as r)) -> balRight v l (delete key r)
-            | Node(_, l, v, r) -> Node(Red, l, v, delete key r)
+            | Node(_, l, v, (Node(Black, _, _, _) as r)) -> balRight v l (delete comparer key r)
+            | Node(_, l, v, r) -> Node(Red, l, v, delete comparer key r)
             | Empty -> failwith "can not delRight on Empty"
 
         let rec append left right =
-            //if left = Empty then right
-            //elif right = Empty then left
-            //else
                 match left, right with
                 | Empty, _ -> right
                 | _, Empty -> left
@@ -140,25 +136,22 @@ module Tree =
                     match bc with
                         | Node(Red, bl, bv, br)   -> Node(Red, Node(Red, l1, v1, bl), bv, Node(Red, br, v2, r2))
                         | _ -> Node(Red, l1, v1, Node(Red, bc, v2, r2))
-                        //| Node(Black, bl, bv, br) -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
-                        //| Empty -> failwith "bc1 can not be empty"
                 | Node(Black, l1, v1, r1), Node(Black, l2, v2, r2) ->
                     let bc = append r1 l2
                     match bc with
                         | Node(Red, bl, bv, br) -> Node(Red, Node(Black, l1, v1, bl), bv, Node(Black, br, v2, r2))
                         | _ -> balLeft v1 l1 (Node(Black, bc, v2, r2))
-                        //| Node(Black, bl, bv, br) -> balLeft v1 l1 (Node(Black, bc, v2, r2))
-                        //| Empty -> failwith "bc2 can not be empty"
 
                 | _, Node(Red, l2, v2, r2) -> Node(Red, append left l2, v2, r2)
                 | Node(Red, l1, v1, r1), _ -> Node(Red, l1, v1, append r1 right)
-                | _ -> failwith ("unmatched tree on append: " + (print left) + "<->" + (print right))
 
         match tree with
         | Empty -> Empty
-        | Node(_, l, v, r) when v > key -> delLeft tree
-        | Node(_, l, v, r) when v < key -> delRight tree
-        | Node(_, l, v, r) -> append l r
+        | Node(_, l, v, r) ->
+            let comp = comparer.Compare(key, v)
+            if comp = 0 then append l r
+            elif comp > 0 then delLeft tree
+            else delRight tree
 
     let rec toJson = function
         | Empty -> ""
@@ -187,9 +180,8 @@ type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.C
     static member Empty : RBTree<'T> = new RBTree<'T>(LanguagePrimitives.FastGenericComparer<'T> , Empty)
 
     member s.Add(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.insert s.Comparer x s.Tree)
-    member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.delete x s.Tree)
+    member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.delete s.Comparer x s.Tree)
     member s.Count = Tree.count s.Tree
     member s.Contains(x) = Tree.exist x s.Tree
     member s.Find(x) = Tree.lookup x s.Tree
     member s.First = Tree.hd s.Tree
-
