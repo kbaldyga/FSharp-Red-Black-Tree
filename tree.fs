@@ -131,7 +131,7 @@ module Tree =
                     let bc = append r1 l2
                     match bc with
                         | Node(Red, bl, bv, br)   -> Node(Red, Node(Red, l1, v1, bl), bv, Node(Red, br, v2, r2))
-                        | _ -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
+                        | _ -> Node(Red, l1, v1, Node(Red, bc, v2, r2))
                         //| Node(Black, bl, bv, br) -> Node(Red, l1, v1, Node(Red, bc, v1, r2))
                         //| Empty -> failwith "bc1 can not be empty"
                 | Node(Black, l1, v1, r1), Node(Black, l2, v2, r2) ->
