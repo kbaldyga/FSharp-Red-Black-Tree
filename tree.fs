@@ -153,6 +153,12 @@ module Tree =
             elif comp < 0 then delLeft tree
             else delRight tree
 
+    let rec iter f = function
+        | Empty -> ()
+        | Node(_, l, v, r) -> iter f l ; f v ; iter f r
+
+    let isEmpty = function | Empty -> true | _ -> false
+
     let rec toJson = function
         | Empty -> ""
         | Node(c, Empty, v, Empty) ->
