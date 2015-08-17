@@ -71,7 +71,7 @@ module Tree =
         | Node(Red, l, v, r) -> Node(Black, l, v, r)
     let redden = function
         | Empty -> Empty
-        | Node(Black, l, v, r ) -> Node(Black, l, v, r)
+        | Node(Black, l, v, r ) -> Node(Red, l, v, r)
         | Node(Red, _, _, _) as r -> r
 
     // "copied" from https://github.com/scala/scala/blob/2.11.x/src/library/scala/collection/immutable/RedBlackTree.scala
