@@ -1,16 +1,21 @@
-module test
+namespace RBTree
 
 open Microsoft.FSharp.Reflection
-let toString (x:'a) = 
-    match FSharpValue.GetUnionFields(x, typeof<'a>) with
-        | case, _ -> case.Name
 
 type color = Red | Black
-type 'a tree = 
+
+[<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
+[<NoEquality; NoComparison>]
+type Tree<'T> = 
     | Empty
-    | Node of color * 'a tree * 'a * 'a tree
+    | Node of color * Tree<'T> * 'T * Tree<'T>
 
 module Tree = 
+    open System.Collections.Generic
+
+    let toString (x:'a) = 
+        match FSharpValue.GetUnionFields(x, typeof<'a>) with
+            | case, _ -> case.Name
 
     let hd = function 
         | Empty -> failwith "empty"
@@ -39,12 +44,13 @@ module Tree =
             -> Node(Red, Node(Black, a, x, b), y, Node(Black, c, z, d))
         | (c, l, x, r) -> Node(c, l, x, r)
 
-    let insert item tree = 
+    let insert (comparer: IComparer<'T>) item tree = 
         let rec ins = function
             | Empty -> Node(Red, Empty, item, Empty)
             | Node(c, l, v, r) as node ->
-                if item = v then node
-                elif item < v then balance(c, ins l, v, r)
+                let comp = comparer.Compare(item, v)
+                if comp = 0 then node
+                elif comp < 0 then balance(c, ins l, v, r)
                 else balance(c, l, v, ins r)
         match ins tree with
             | Empty -> failwith "Should never return empty from an insert"
@@ -62,7 +68,7 @@ module Tree =
         | Empty -> None
         | Node(_, l, v, r) when key < v -> lookup key l
         | Node(_, l, v, r) when key > v -> lookup key r
-        | Node(_, l, v, r) as node when key = v -> Some(node)
+        | Node(_, l, v, r) as node when key = v -> Some(v)
 
     // consider moving inside delete
     let blacken = function
@@ -122,11 +128,13 @@ module Tree =
             | Node(_, l, v, r) -> Node(Red, l, v, delete key r)
             | Empty -> failwith "can not delRight on Empty"
 
-        let rec append (left: 'a tree) (right: 'a tree) =
-            if left = Empty then right
-            elif right = Empty then left
-            else
+        let rec append left right =
+            //if left = Empty then right
+            //elif right = Empty then left
+            //else
                 match left, right with
+                | Empty, _ -> right
+                | _, Empty -> left
                 | Node(Red, l1, v1, r1), Node(Red, l2, v2, r2) ->
                     let bc = append r1 l2
                     match bc with
@@ -167,6 +175,21 @@ module Tree =
              (toJson l) + ","+ (toJson r)
             + "]}"
 
+//
+//    let test = Seq.fold (fun acc item -> insert item acc) Empty [1..100]
+//                |> delete 40 |> toJson
 
-    let test = Seq.fold (fun acc item -> insert item acc) Empty [1..100]
-                |> delete 40 |> toJson
+[<Sealed>]
+type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.Collections.Generic.IComparer<'T>, tree: Tree<'T>) = 
+    member internal set.Tree : Tree<'T> = tree
+    member internal set.Comparer = comparer
+    
+    static member Empty : RBTree<'T> = new RBTree<'T>(LanguagePrimitives.FastGenericComparer<'T> , Empty)
+
+    member s.Add(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.insert s.Comparer x s.Tree)
+    member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.delete x s.Tree)
+    member s.Count = Tree.count s.Tree
+    member s.Contains(x) = Tree.exist x s.Tree
+    member s.Find(x) = Tree.lookup x s.Tree
+    member s.First = Tree.hd s.Tree
+
