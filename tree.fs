@@ -150,7 +150,7 @@ module Tree =
         | Node(_, l, v, r) ->
             let comp = comparer.Compare(key, v)
             if comp = 0 then append l r
-            elif comp > 0 then delLeft tree
+            elif comp < 0 then delLeft tree
             else delRight tree
 
     let rec toJson = function
@@ -168,9 +168,12 @@ module Tree =
              (toJson l) + ","+ (toJson r)
             + "]}"
 
-//
-//    let test = Seq.fold (fun acc item -> insert item acc) Empty [1..100]
-//                |> delete 40 |> toJson
+    let test  = 
+        Seq.fold (fun acc item -> 
+                    (insert LanguagePrimitives.FastGenericComparer<int> item acc)) 
+                Empty [1..100]
+                |> delete LanguagePrimitives.FastGenericComparer<int> 40 
+                |> toJson
 
 [<Sealed>]
 type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.Collections.Generic.IComparer<'T>, tree: Tree<'T>) = 
