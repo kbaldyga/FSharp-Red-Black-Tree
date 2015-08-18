@@ -1,7 +1,5 @@
 namespace RBTree
 
-open Microsoft.FSharp.Reflection
-
 type color = Red | Black
 
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
@@ -14,8 +12,7 @@ module Tree =
     open System.Collections.Generic
 
     let toString (x:'a) = 
-        match FSharpValue.GetUnionFields(x, typeof<'a>) with
-            | case, _ -> case.Name
+        match Microsoft.FSharp.Reflection.FSharpValue.GetUnionFields(x, typeof<'a>) with | case, _ -> case.Name
 
     let hd = function 
         | Empty -> failwith "empty"
@@ -28,13 +25,6 @@ module Tree =
     let right = function
         | Empty -> failwith "empty"
         | Node(_, _, _, r) -> r
-
-    let rec exist item = function
-        | Empty -> false
-        | Node(_, l, v, r) -> 
-            if item = v then true
-            elif item < v then exist item l
-            else exist item r
 
     let balance = function
         | (Black, Node(Red, Node(Red, a, x, b), y, c), z, d)
@@ -64,15 +54,19 @@ module Tree =
         | Empty -> 0
         | Node(_, l, _, r) -> 1 + count l + count r
 
-    let rec lookup key = function
+    let rec lookup (comparer: IComparer<'T>) key = function
         | Empty -> None
-        | Node(_, l, v, r) when key < v -> lookup key l
-        | Node(_, l, v, r) when key > v -> lookup key r
-        | Node(_, l, v, r) as node when key = v -> Some(v)
+        | Node(_, l, v, r) ->
+            let cmp = comparer.Compare(key, v)
+            in if cmp = 0 then Some(v)
+                elif cmp < 0 then lookup comparer key l
+                else lookup comparer key r
 
-    // "copied" from https://github.com/scala/scala/blob/2.11.x/src/library/scala/collection/immutable/RedBlackTree.scala
+    let rec exist (comparer: IComparer<'T>) item tree = match lookup comparer item tree with | None -> false | _ -> true
+
+    // Based on Stefan Kahrs' Haskell version of Okasaki's Red&Black Trees
+    // http://www.cse.unsw.edu.au/~dons/data/RedBlackTree.html 
     let rec delete (comparer: IComparer<'T>) key tree =
-
         let blacken = function
             | Empty -> Empty
             | Node(Black, _, _, _ ) as b -> b
@@ -159,6 +153,73 @@ module Tree =
 
     let isEmpty = function | Empty -> true | _ -> false
 
+    let copyToArray s (arr: _[]) i =
+        let j = ref i 
+        iter (fun x -> arr.[!j] <- x; j := !j + 1) s
+
+    let toArray s = 
+        let n = (count s) 
+        let res = Array.zeroCreate n 
+        copyToArray s res 0;
+        res
+
+    //--------------------------------------------------------------------------
+    // Imperative left-to-right iterators, based on FSharp.Core/set.fs
+    //--------------------------------------------------------------------------
+    open System.Collections
+    open System.Collections.Generic
+
+    [<NoEquality; NoComparison>]
+    type TreeIterator<'T> when 'T : comparison = { mutable stack: Tree<'T> list; mutable started : bool }
+
+    let rec collapse stack =
+        match stack with
+        | []                        -> []
+        | Empty                     :: rest -> collapse rest
+        | Node(_, Empty, v, Empty)  :: _    -> stack
+        | Node(c, l, v, r)          :: rest -> collapse (l::Node(c, Empty, v, Empty)::r::rest)
+          
+    let mkIterator s = { stack = collapse [s]; started = false }
+
+    let notStarted() = raise (new System.InvalidOperationException("enumerationNotStarted"))
+    let alreadyFinished() = raise (new System.InvalidOperationException("enumerationAlreadyFinished"))
+
+    let current i =
+        if i.started then
+            match i.stack with
+                | Node(_, Empty, v, Empty) :: _ -> v
+                | []            -> alreadyFinished()
+                | _             -> failwith "Tree iterator, unexpected stack for current"
+        else
+            notStarted()
+
+    let rec moveNext i =
+        if i.started then
+            match i.stack with
+                | Node(_, Empty, _, Empty) :: rest -> 
+                    i.stack <- collapse rest;
+                    not i.stack.IsEmpty 
+                | [] -> false
+                | _ -> failwith "Tree iterator, unexpected stack for moveNext"
+        else
+            i.started <- true;  // The first call to MoveNext "starts" the enumeration.
+            not i.stack.IsEmpty 
+
+    let mkIEnumerator s = 
+        let i = ref (mkIterator s) 
+        { new IEnumerator<_> with 
+                member x.Current = current !i
+            interface IEnumerator with 
+                member x.Current = box (current !i)
+                member x.MoveNext() = moveNext !i
+                member x.Reset() = i :=  mkIterator s
+            interface System.IDisposable with 
+                member x.Dispose() = () }
+
+    //--------------------------------------------------------------------------
+    // Debugging purposes
+    //--------------------------------------------------------------------------
+#if DEBUG
     let rec toJson = function
         | Empty -> ""
         | Node(c, Empty, v, Empty) ->
@@ -180,6 +241,10 @@ module Tree =
                 Empty [1..100]
                 |> delete LanguagePrimitives.FastGenericComparer<int> 40 
                 |> toJson
+#endif
+
+open System.Collections
+open System.Collections.Generic
 
 [<Sealed>]
 type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.Collections.Generic.IComparer<'T>, tree: Tree<'T>) = 
@@ -191,6 +256,21 @@ type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.C
     member s.Add(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.insert s.Comparer x s.Tree)
     member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.delete s.Comparer x s.Tree)
     member s.Count = Tree.count s.Tree
-    member s.Contains(x) = Tree.exist x s.Tree
+    member s.Contains(x) = Tree.exist s.Comparer x s.Tree
     member s.Find(x) = Tree.lookup x s.Tree
     member s.First = Tree.hd s.Tree
+
+    interface IEnumerable<'T> with
+        member s.GetEnumerator() = Tree.mkIEnumerator s.Tree
+
+    interface IEnumerable with
+        override s.GetEnumerator() = (Tree.mkIEnumerator s.Tree :> IEnumerator)
+
+    interface ICollection<'T> with 
+        member s.Add(x)      = ignore(x); raise (new System.NotSupportedException("ReadOnlyCollection"))
+        member s.Clear()     = raise (new System.NotSupportedException("ReadOnlyCollection"))
+        member s.Remove(x)   = ignore(x); raise (new System.NotSupportedException("ReadOnlyCollection"))
+        member s.Contains(x) = Tree.exist s.Comparer x s.Tree
+        member s.CopyTo(arr,i) = Tree.copyToArray s.Tree arr i
+        member s.IsReadOnly = true
+        member s.Count = Tree.count s.Tree
