@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RBTree.Console", "RBTree.Console\RBTree.Console.csproj", "{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "RBTree.Library", "RBTree.Library\RBTree.Library.fsproj", "{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
