@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RBTree.Console", "RBTree.Co
 EndProject
 Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "RBTree.Library", "RBTree.Library\RBTree.Library.fsproj", "{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}"
 EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "RBTree.Tests", "RBTree.Tests\RBTree.Tests.fsproj", "{CADADD9A-C405-4E5D-9B57-393B505EE68A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CADADD9A-C405-4E5D-9B57-393B505EE68A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CADADD9A-C405-4E5D-9B57-393B505EE68A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CADADD9A-C405-4E5D-9B57-393B505EE68A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CADADD9A-C405-4E5D-9B57-393B505EE68A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D43A6EAE-C2CC-43E3-8422-2FB3D21F2AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
