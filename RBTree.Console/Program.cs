@@ -5,7 +5,7 @@ using System.Linq;
 using Akka.Util.Internal.Collections;
 using RBTree;
 
-namespace TestingTest
+namespace RBTree.Console
 {
     class Program
     {
@@ -25,13 +25,13 @@ namespace TestingTest
             //var immSet = System.Collections.Immutable.ImmutableHashSet<int>.Empty;
             //Execute("immset insert", () => { randoms.ForEach(r => immSet = immSet.Add(r)); return set; });
 
-            Console.WriteLine();
-            //randoms = Enumerable.Range(0, tests).Select(_ => random.Next()).ToList();
+            System.Console.WriteLine();
+            randoms = Enumerable.Range(0, tests).Select(_ => random.Next()).ToList();
             // LOOKUP
             Execute("rb  contains", () => { randoms.ForEach(r => tree.Contains(r)); return tree; });
             Execute("set  contains", () => { randoms.ForEach(r => set.Contains(r)); return tree; });
 
-			Console.WriteLine();
+			System.Console.WriteLine();
             // DELETE
             Execute("rb  remove", () => { randoms.ForEach(r => tree = tree.Remove(r)); return tree; });
             Execute("set  remove", () => { randoms.ForEach(r => set = set.Remove(r)); return tree; });
@@ -47,7 +47,7 @@ namespace TestingTest
             var result = action();
             sw.Stop();
 
-            Console.WriteLine("{0}: {1}", name, sw.ElapsedMilliseconds);
+            System.Console.WriteLine("{0}: {1}", name, sw.ElapsedMilliseconds);
             return result;
         }
     }

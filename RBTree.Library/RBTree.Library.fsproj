@@ -7,7 +7,7 @@
     <ProjectGuid>{A1683362-4E8D-47D1-B0F0-C66ECA83CDE8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Library1</RootNamespace>
-    <AssemblyName>Library1</AssemblyName>
+    <AssemblyName>RBTree.Library</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
     <Name>Library1</Name>
