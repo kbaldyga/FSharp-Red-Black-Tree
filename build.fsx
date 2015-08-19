@@ -71,7 +71,7 @@ Target "CleanTests" <| fun _ ->
 
 open XUnit2Helper
 Target "RunTests" <| fun _ ->  
-    let nunitTestAssemblies = !! "**/*.Tests.dll"
+    let nunitTestAssemblies = !! "**/bin/Release/RBTree.Tests.dll"
 
     nunitTestAssemblies
     |> NUnit (fun p -> 
@@ -80,7 +80,7 @@ Target "RunTests" <| fun _ ->
             OutputFile = testOutput + @"\NUnitTestResults.xml"})
 
 Target "RunTestsMono" <| fun _ ->  
-    let xunitTestAssemblies = !! "**/*.Tests.dll"
+    let xunitTestAssemblies = !! "**/bin/Release/RBTree.Tests.dll"
 
     mkdir testOutput
 
