@@ -66,6 +66,7 @@ Target "Build" <| fun _ ->
 
 Target "CleanTests" <| fun _ ->
     DeleteDir testOutput
+    CreateDir testOutput
 //--------------------------------------------------------------------------------
 // Run tests
 
