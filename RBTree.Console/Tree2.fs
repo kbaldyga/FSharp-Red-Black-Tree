@@ -7,7 +7,6 @@ type Tree<'t> =
     | EEmpty // double black leaf
     | Node of color * Tree<'t> * 't * Tree<'t>
 
-
 module Tree =
     open System.Collections.Generic
 
@@ -49,29 +48,6 @@ module Tree =
         | EEmpty -> Empty
         | Node(c, l, v, r) -> Node(redder c, l, v, r)
 
-    let balance tree = 
-        match tree with
-            //Okasaki's original cases:
-            | (Black, Node(Red, Node(Red, a, x, b), y, c), z, d)
-            | (Black, Node(Red, a, x, Node(Red, b, y, c)), z, d)
-            | (Black, a, x, Node(Red, Node(Red, b, y, c), z, d))
-            | (Black, a, x, Node(Red, b, y, Node(Red, c, z, d)))
-                -> Node(Red, Node(Black, a, x, b), y, Node(Black, c, z, d))
-            //Six cases for deletion:
-
-            //balance BB (T R (T R a x b) y c) z d = T B (T B a x b) y (T B c z d)
-            //balance BB (T R a x (T R b y c)) z d = T B (T B a x b) y (T B c z d)
-            //balance BB a x (T R (T R b y c) z d) = T B (T B a x b) y (T B c z d)
-            //balance BB a x (T R b y (T R c z d)) = T B (T B a x b) y (T B c z d)
-            //
-            //balance BB a x (T NB (T B b y c) z d@(T B _ _ _)) 
-            //    = T B (T B a x b) y (balance B c z (redden d))
-            //balance BB (T NB a@(T B _ _ _) x (T B b y c)) z d
-            //    = T B (balance B (redden a) x b) y (T B c z d)
-
-            | (c, l, x, r) -> Node(c, l, x, r)
-
-
 //
 // -- `balance` rotates away coloring conflicts:
 //balance :: Color -> RBSet a -> a -> RBSet a -> RBSet a
@@ -93,54 +69,77 @@ module Tree =
 //balance BB (T NB a@(T B _ _ _) x (T B b y c)) z d
 //    = T B (balance B (redden a) x b) y (T B c z d)
 //
-//balance color a x b = T color a x b
-//
-// -- `bubble` "bubbles" double-blackness upward:
-//bubble :: Color -> RBSet a -> a -> RBSet a -> RBSet a
-//bubble color l x r
-// | isBB(l) || isBB(r) = balance (blacker color) (redder' l) x (redder' r)
-// | otherwise          = balance color l x r
-//
-//
-//
-//
-// -- Public operations --
-//
-//empty :: RBSet a
-//empty = E
-//
-//
-//member :: (Ord a) => a -> RBSet a -> Bool
-//member x E = False
-//member x (T _ l y r) | x < y     = member x l
-//                     | x > y     = member x r
-//                     | otherwise = True
-//
-//max :: RBSet a -> a
-//max E = error "no largest element"
-//max (T _ _ x E) = x
-//max (T _ _ x r) = max r
-//
-//
-// -- Insertion:
-//
-//insert :: (Ord a) => a -> RBSet a -> RBSet a                    
-//insert x s = blacken (ins s) 
-// where ins E = T R E x E
-//       ins s@(T color a y b) | x < y     = balance color (ins a) y b
-//                             | x > y     = balance color a y (ins b)
-//                             | otherwise = s
-//
-//
-// -- Deletion:
-//
-//delete :: (Ord a,Show a) => a -> RBSet a -> RBSet a
-//delete x s = blacken(del s)
-// where del E = E
-//       del s@(T color a y b) | x < y     = bubble color (del a) y b
-//                             | x > y     = bubble color a y (del b)
-//                             | otherwise = remove s
-//
+
+    let rec balance = function
+            //Okasaki's original cases:
+            | (Black, Node(Red, Node(Red, a, x, b), y, c), z, d)
+            | (Black, Node(Red, a, x, Node(Red, b, y, c)), z, d)
+            | (Black, a, x, Node(Red, Node(Red, b, y, c), z, d))
+            | (Black, a, x, Node(Red, b, y, Node(Red, c, z, d)))
+                -> Node(Red, Node(Black, a, x, b), y, Node(Black, c, z, d))
+            //Six cases for deletion:
+            | (BB, Node(Red, Node(Red, a, x, b), y, c), z, d ) -> Node(Black, Node(Black, a, x, b), y, Node(Black, c, z, d))
+            | (BB, Node(Red, a, x, Node(Red, b, y, c)), z, d) -> Node(Black, Node(Black, a, x, b), y, Node(Black, c, z, d))
+            | (BB, a, x, Node(Red, Node(Red, b, y, c), z, d)) -> Node(Black, Node(Black, a, x, b), y, Node(Black, c, z, d))
+            | (BB, a, x, Node(Red, b, y, Node(Red, c, z, d))) -> Node(Black, Node(Black, a, x, b), y, Node(Black, c, z, d))
+            //
+            | (BB, a, x, Node(NB, Node(Black, b, y, c), z, (Node(Black, _, _, _) as d))) ->
+                Node(Black, Node(Black, a, x, b), y, (balance (Black, c,  z, (redden d))))
+            | (BB, Node(NB, (Node(Black, _, _, _) as a), x, Node(Black, b, y, c)), z, d) ->
+                Node(Black, balance (Black, redden a, x, b), y, Node(Black, c, z, d))
+            | (c, l, x, r) -> Node(c, l, x, r)
+
+    let bubble color l x  r = 
+        match isBB(l) || isBB(r) with
+        | true -> balance ((blacker color), (redder' l), x, (redder' r))
+        | _ -> balance (color, l, x, r)
+
+    let empty = Empty
+
+    let rec lookup x = function
+        | Empty -> None
+        | Node(_, l, v, r) ->
+            if x = v then Some(v) 
+            elif x < v then lookup x l
+            else lookup x r 
+
+    let rec max = function
+        | Empty -> failwith "no largest element"
+        | Node(_, _, x, Empty) -> x
+        | Node(_, _, x, r) -> max r
+
+    let insert x s =
+        let rec ins = function
+            | Empty -> Node(Red, Empty, x, Empty)
+            | Node(color, a, y, b) as s ->
+                if x < y then balance (color, (ins a), y, b)
+                elif x > y then balance (color, a, y, (ins b))
+                else s
+        in blacken (ins s)
+
+    let rec removeMax = function
+        | Empty -> failwith "no maximum to remove"
+        | Node(_, _, _, Empty) as s -> remove s
+        | Node(color, l, x, r)-> bubble color l x (removeMax r)
+
+    and remove = function
+        | Empty -> Empty
+        | Node(Red, Empty, _, Empty) -> Empty
+        | Node(Blac, Empty, _, Empty) -> EEmpty
+        | Node(Black, Empty, _, Node(Red, a, x, b)) -> Node(Black, a, x, b)
+        | Node(Black, Node(Red, a, x, b), _, Empty) -> Node(Black, a, x, b)
+        | Node(color, l, y,  r) -> bubble color (removeMax l) (max l) r
+
+    let delete x s = 
+        let rec del = function
+            | Empty -> Empty
+            | Node(c, a, y, b) as s ->
+                if x < y then bubble c (del a) y b
+                elif x > y then bubble c a y (del b)
+                else remove s
+        in blacken(del s)
+
+
 //remove :: RBSet a -> RBSet a
 //remove E = E
 //remove (T R E _ E) = E
@@ -150,11 +149,6 @@ module Tree =
 //remove (T color l y r) = bubble color l' mx r 
 // where mx = max l
 //       l' = removeMax l
-//
-//removeMax :: RBSet a -> RBSet a
-//removeMax E = error "no maximum to remove"
-//removeMax s@(T _ _ _ E) = remove s
-//removeMax s@(T color l x r) = bubble color l x (removeMax r)
 //
 // -- Conversion:
 //
@@ -167,3 +161,25 @@ module Tree =
 //instance Eq a => Eq (RBSet a) where
 // rb == rb' = (toAscList rb) == (toAscList rb')
 //
+
+    let rec toJson = function
+        | Empty -> ""
+        | Node(c, Empty, v, Empty) ->
+            """ { "name" : " """ + (toString c) + " " + (v.ToString()) + """ ", "children": [] }"""
+        | Node(c, Empty, v, (Node(_, _, _, _) as r)) ->
+            """{ "name": " """ + (toString c) + " " + (v.ToString()) + """", "children":[ """ +
+             (toJson r) + "]}"   
+        | Node(c, (Node(_,_,_,_) as l), v, Empty) ->
+            """{ "name": " """ + (toString c) + " " + (v.ToString()) + """", "children":[ """ +
+             (toJson l) + "]}"
+        | Node(c, l, v, r) ->
+            """{ "name": " """ + (toString c) + " " + (v.ToString()) + """", "children":[ """ +
+             (toJson l) + ","+ (toJson r)
+            + "]}"
+
+    let test  = 
+        Seq.fold (fun acc item -> 
+                    (insert item acc)) 
+                Empty [1..100]
+                |> delete  40 
+                |> toJson
