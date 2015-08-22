@@ -39,7 +39,6 @@ module Tree =
         | Black -> Red
         | BB -> Black
 
-
     let blacker' = function
         | Empty -> EEmpty
         | Node(c, l, v, r) -> Node(blacker c, l, v, r)
@@ -47,28 +46,6 @@ module Tree =
     let redder' = function
         | EEmpty -> Empty
         | Node(c, l, v, r) -> Node(redder c, l, v, r)
-
-//
-// -- `balance` rotates away coloring conflicts:
-//balance :: Color -> RBSet a -> a -> RBSet a -> RBSet a
-//
-// -- Okasaki's original cases:
-//balance B (T R (T R a x b) y c) z d = T R (T B a x b) y (T B c z d)
-//balance B (T R a x (T R b y c)) z d = T R (T B a x b) y (T B c z d)
-//balance B a x (T R (T R b y c) z d) = T R (T B a x b) y (T B c z d)
-//balance B a x (T R b y (T R c z d)) = T R (T B a x b) y (T B c z d)
-//
-// -- Six cases for deletion:
-//balance BB (T R (T R a x b) y c) z d = T B (T B a x b) y (T B c z d)
-//balance BB (T R a x (T R b y c)) z d = T B (T B a x b) y (T B c z d)
-//balance BB a x (T R (T R b y c) z d) = T B (T B a x b) y (T B c z d)
-//balance BB a x (T R b y (T R c z d)) = T B (T B a x b) y (T B c z d)
-//
-//balance BB a x (T NB (T B b y c) z d@(T B _ _ _)) 
-//    = T B (T B a x b) y (balance B c z (redden d))
-//balance BB (T NB a@(T B _ _ _) x (T B b y c)) z d
-//    = T B (balance B (redden a) x b) y (T B c z d)
-//
 
     let rec balance = function
             //Okasaki's original cases:
@@ -88,6 +65,7 @@ module Tree =
             | (BB, Node(NB, (Node(Black, _, _, _) as a), x, Node(Black, b, y, c)), z, d) ->
                 Node(Black, balance (Black, redden a, x, b), y, Node(Black, c, z, d))
             | (c, l, x, r) -> Node(c, l, x, r)
+            | _ as s -> failwith ("cant balance " + (toString s))
 
     let bubble color l x  r = 
         match isBB(l) || isBB(r) with
@@ -102,11 +80,13 @@ module Tree =
             if x = v then Some(v) 
             elif x < v then lookup x l
             else lookup x r 
+        | _ as s -> failwith ("cant lookup " + (toString s))
 
     let rec max = function
         | Empty -> failwith "no largest element"
         | Node(_, _, x, Empty) -> x
         | Node(_, _, x, r) -> max r
+        | _ as s -> failwith ("cant max " + (toString s))
 
     let insert x s =
         let rec ins = function
@@ -115,20 +95,23 @@ module Tree =
                 if x < y then balance (color, (ins a), y, b)
                 elif x > y then balance (color, a, y, (ins b))
                 else s
+            | _ as s -> failwith ("cant insert " + (toString x))
         in blacken (ins s)
 
     let rec removeMax = function
         | Empty -> failwith "no maximum to remove"
         | Node(_, _, _, Empty) as s -> remove s
         | Node(color, l, x, r)-> bubble color l x (removeMax r)
+        | _ as s -> failwith ("cant removeMax " + (toString s))
 
     and remove = function
         | Empty -> Empty
         | Node(Red, Empty, _, Empty) -> Empty
-        | Node(Blac, Empty, _, Empty) -> EEmpty
+        | Node(Black, Empty, _, Empty) -> EEmpty
         | Node(Black, Empty, _, Node(Red, a, x, b)) -> Node(Black, a, x, b)
         | Node(Black, Node(Red, a, x, b), _, Empty) -> Node(Black, a, x, b)
         | Node(color, l, y,  r) -> bubble color (removeMax l) (max l) r
+        | _ as s -> failwith ("cant remove case" + (toString s))
 
     let delete x s = 
         let rec del = function
@@ -137,39 +120,18 @@ module Tree =
                 if x < y then bubble c (del a) y b
                 elif x > y then bubble c a y (del b)
                 else remove s
+            | _ as s -> failwith ("cant delete " + (toString x))
         in blacken(del s)
-
-
-//remove :: RBSet a -> RBSet a
-//remove E = E
-//remove (T R E _ E) = E
-//remove (T B E _ E) = EE
-//remove (T B E _ (T R a x b)) = T B a x b
-//remove (T B (T R a x b) _ E) = T B a x b
-//remove (T color l y r) = bubble color l' mx r 
-// where mx = max l
-//       l' = removeMax l
-//
-// -- Conversion:
-//
-//toAscList :: RBSet a -> [a]
-//toAscList E = []
-//toAscList (T _ l x r) = (toAscList l) ++ [x] ++ (toAscList r)
-//
-// -- Equality
-//
-//instance Eq a => Eq (RBSet a) where
-// rb == rb' = (toAscList rb) == (toAscList rb')
-//
 
     let rec toJson = function
         | Empty -> ""
-        | Node(c, Empty, v, Empty) ->
+        | EEmpty -> ""
+        | Node(c, Empty, v, Empty) | Node(c, EEmpty, v, EEmpty) ->
             """ { "name" : " """ + (toString c) + " " + (v.ToString()) + """ ", "children": [] }"""
-        | Node(c, Empty, v, (Node(_, _, _, _) as r)) ->
+        | Node(c, Empty, v, (Node(_, _, _, _) as r))| Node(c, EEmpty, v, (Node(_, _, _, _) as r)) ->
             """{ "name": " """ + (toString c) + " " + (v.ToString()) + """", "children":[ """ +
              (toJson r) + "]}"   
-        | Node(c, (Node(_,_,_,_) as l), v, Empty) ->
+        | Node(c, (Node(_,_,_,_) as l), v, Empty) | Node(c, (Node(_,_,_,_) as l), v, EEmpty) ->
             """{ "name": " """ + (toString c) + " " + (v.ToString()) + """", "children":[ """ +
              (toJson l) + "]}"
         | Node(c, l, v, r) ->
@@ -181,5 +143,5 @@ module Tree =
         Seq.fold (fun acc item -> 
                     (insert item acc)) 
                 Empty [1..100]
-                |> delete  40 
+                |> delete  40 |> delete 74
                 |> toJson
