@@ -2,6 +2,7 @@
 
 type color = Red | Black | BB | NB
 
+[<NoEquality; NoComparison>]
 type Tree<'t> = 
     | Empty // black leaf
     | EEmpty // double black leaf
