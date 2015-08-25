@@ -1,6 +1,6 @@
 # Immutable red-black tree
 
-[![Build Status](https://travis-ci.org/kbaldyga/Tree.svg)](https://travis-ci.org/kbaldyga/Tree)
+[![Build Status](https://travis-ci.org/kbaldyga/FSharp-Red-Black-Tree.svg?branch=measure-tools)](https://travis-ci.org/kbaldyga/FSharp-Red-Black-Tree)
 
 # Deleting from Okasaki's red-black trees
 
