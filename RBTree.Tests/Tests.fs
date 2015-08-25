@@ -9,7 +9,7 @@ let createTree = SampleData.nineThousandNumbers |>
                     Seq.fold (fun (acc:RBTree<int>) (item:int) -> acc.Add(item)) RBTree<int>.Empty
                   
 let createTree2 = SampleData.nineThousandNumbers |>
-                    Seq.fold (fun (acc:RBTree2.RBTree<int>) (item:int) -> acc.Add(item)) RBTree2.RBTree<int>.Empty
+                    Seq.fold (fun (acc:RedBlackTree.RBTree<int>) (item:int) -> acc.Add(item)) RedBlackTree.RBTree<int>.Empty
                   
 
 [<Test>]
@@ -32,7 +32,7 @@ let ``Delete all creates an empty tree``() =
     let tree = createTree
                 |> fun t -> Seq.fold (fun (acc:RBTree<int>) (item:int) -> acc.Remove(item)) t SampleData.nineThousandNumbers
     let tree2 = createTree2
-                |> fun t -> Seq.fold (fun (acc:RBTree2.RBTree<int>) (item:int) -> acc.Remove(item)) t SampleData.nineThousandNumbers
+                |> fun t -> Seq.fold (fun (acc:RedBlackTree.RBTree<int>) (item:int) -> acc.Remove(item)) t SampleData.nineThousandNumbers
     in tree.Count.ShouldBe 0 ; tree2.Count.ShouldBe 0
 
 open System.Collections.Generic
@@ -52,7 +52,7 @@ let ``Get enumerable creates ordered collection``() =
         (orderedTreeArray.[i]).ShouldBeLessThan(orderedTreeArray.[i+1])
 
 [<Test>]
-let ``Get enumerable RBTree 2creates ordered collection``() =
+let ``Get enumerable RedBlackTree2 creates ordered collection``() =
     let tree = createTree2
     let orderedTree = (tree :> IEnumerable<int>)
     let mutable orderedArray = Array.zeroCreate tree.Count

@@ -1,4 +1,4 @@
-﻿namespace RedBlackTree
+﻿namespace RBTree2
 
 type color = Red | Black | BB | NB
 
@@ -8,7 +8,7 @@ type Tree<'t> =
     | EEmpty // double black leaf
     | Node of color * Tree<'t> * 't * Tree<'t>
 
-module RedBlackTree =
+module Tree =
     open System.Collections.Generic
 
     let toString (x:'a) = 
@@ -259,24 +259,24 @@ type RBTree<[<EqualityConditionalOn>]'T when 'T : comparison >(comparer:System.C
     
     static member Empty : RBTree<'T> = new RBTree<'T>(LanguagePrimitives.FastGenericComparer<'T> , Empty)
 
-    member s.Add(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, RedBlackTree.insert s.Comparer x s.Tree)
-    member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, RedBlackTree.delete s.Comparer x s.Tree)
-    member s.Count = RedBlackTree.count s.Tree
-    member s.Contains(x) = RedBlackTree.exist s.Comparer x s.Tree
-    member s.Find(x) = RedBlackTree.lookup x s.Tree
-    member s.First = RedBlackTree.hd s.Tree
+    member s.Add(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.insert s.Comparer x s.Tree)
+    member s.Remove(x) : RBTree<'T> = new RBTree<'T>(s.Comparer, Tree.delete s.Comparer x s.Tree)
+    member s.Count = Tree.count s.Tree
+    member s.Contains(x) = Tree.exist s.Comparer x s.Tree
+    member s.Find(x) = Tree.lookup x s.Tree
+    member s.First = Tree.hd s.Tree
 
     interface IEnumerable<'T> with
-        member s.GetEnumerator() = RedBlackTree.mkIEnumerator s.Tree
+        member s.GetEnumerator() = Tree.mkIEnumerator s.Tree
 
     interface IEnumerable with
-        override s.GetEnumerator() = (RedBlackTree.mkIEnumerator s.Tree :> IEnumerator)
+        override s.GetEnumerator() = (Tree.mkIEnumerator s.Tree :> IEnumerator)
 
     interface ICollection<'T> with 
         member s.Add(x)      = ignore(x); raise (new System.NotSupportedException("ReadOnlyCollection"))
         member s.Clear()     = raise (new System.NotSupportedException("ReadOnlyCollection"))
         member s.Remove(x)   = ignore(x); raise (new System.NotSupportedException("ReadOnlyCollection"))
-        member s.Contains(x) = RedBlackTree.exist s.Comparer x s.Tree
-        member s.CopyTo(arr,i) = RedBlackTree.copyToArray s.Tree arr i
+        member s.Contains(x) = Tree.exist s.Comparer x s.Tree
+        member s.CopyTo(arr,i) = Tree.copyToArray s.Tree arr i
         member s.IsReadOnly = true
-        member s.Count = RedBlackTree.count s.Tree
+        member s.Count = Tree.count s.Tree

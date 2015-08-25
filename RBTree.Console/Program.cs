@@ -11,7 +11,7 @@ namespace RBTree.Console
         {
             const int tests = 1000000;
             var tree = RBTree<int>.Empty;
-			var tree2 = RBTree2.RBTree<int>.Empty;
+            var tree2 = RedBlackTree.RBTree<int>.Empty;
             var set = ImmutableTreeSet<int>.Empty;
             var random = new Random();
             var randoms = Enumerable.Range(0, tests).Select(_ => random.Next()).ToList();
