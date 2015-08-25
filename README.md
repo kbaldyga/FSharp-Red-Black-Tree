@@ -8,11 +8,11 @@ See http://matt.might.net/articles/red-black-delete/ for explanation of the algo
 
 # Performance
 
-rb -> Stefan Kahrs' implementation
-rb2 -> Matt Might's implementation
-set -> Immutable AVL tree in C# (http://justinmchase.com/2011/12/13/immutable-avl-tree-in-c/)
-fset -> F# set
-immset -> https://www.nuget.org/packages/System.Collections.Immutable/
+* rb -> Stefan Kahrs' implementation
+* rb2 -> Matt Might's implementation
+* set -> Immutable AVL tree in C# (http://justinmchase.com/2011/12/13/immutable-avl-tree-in-c/)
+* fset -> F# set
+* immset -> https://www.nuget.org/packages/System.Collections.Immutable/
 
 ```bash
 C:\Tree [master +0 ~1 -0]> .\RBTree.Console\bin\Release\RBTree.Console.exe
