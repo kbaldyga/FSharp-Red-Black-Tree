@@ -15,7 +15,7 @@ See http://matt.might.net/articles/red-black-delete/ for explanation of the algo
 * immset -> https://www.nuget.org/packages/System.Collections.Immutable/
 
 ```bash
-C:\Tree [master +0 ~1 -0]> .\RBTree.Console\bin\Release\RBTree.Console.exe
+C:\ [master +0 ~1 -0]> .\RBTree.Console.exe
 rb  insert: 4000
 rb2  insert: 4906
 set insert: 4899
@@ -33,4 +33,26 @@ rb2  remove: 4644
 set  remove: 4383
 fset  remove: 3680
 immset  remove: 4432
+```
+
+Same run on a MacBook Pro
+
+```bash
+rb  insert: 2931
+rb2  insert: 3555
+set insert: 4646
+fset insert: 3808
+immset insert: 6486
+
+rb  contains: 575
+rb2  contains: 683
+set  contains: 719
+fset  contains: 586
+immset  contains: 763
+
+rb  remove: 3626
+rb2  remove: 3851
+set  remove: 4745
+fset  remove: 3329
+immset  remove: 5717
 ```
